@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Menu } from "@/lib/shopify/types";
-import { SearchNavbar } from "./search";
+import { SearchNavbar, SearchSkeleton } from "./search";
 import { IconShoppingCart } from "@tabler/icons-react";
 import { Logo } from "../logo";
+import { Suspense } from "react";
 
 type DesktopNavbarProps = {
   menu: Menu[];
@@ -25,7 +26,7 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
       {/* LEFT: Logo + Nav links */}
       <div className="flex items-center gap-8 2xl:ml-20">
         <Link href={redirectHome.path} className="flex items-center">
-          <Logo/>
+          <Logo />
         </Link>
         {filteredMenu.map((item) =>
           item.children && item.children.length > 0 ? (
@@ -89,7 +90,9 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
       {/* CENTER: Search */}
       <div className="flex-1 flex justify-center px-4">
         <div className="w-full max-w-2xl">
-          <SearchNavbar />
+          <Suspense fallback={<SearchSkeleton/>}>
+            <SearchNavbar />
+          </Suspense>
         </div>
       </div>
 

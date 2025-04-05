@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { Menu } from "@/lib/shopify/types";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { SearchNavbar } from "./search";
+import { SearchNavbar, SearchSkeleton } from "./search";
 import { IconShoppingCart } from "@tabler/icons-react";
 import { Logo } from "../logo";
 
@@ -84,7 +84,9 @@ const MobileNavbar = ({ menu }: MobileNavbarProps) => {
             className="absolute top-full left-0 w-full bg-white border-t shadow-md z-40"
           >
             <div className="flex flex-col p-4 space-y-2">
-              <SearchNavbar />
+              <Suspense fallback={<SearchSkeleton />}>
+                <SearchNavbar />
+              </Suspense>
               {filteredMenu.map((item) => (
                 <div key={item.title}>
                   <Link
