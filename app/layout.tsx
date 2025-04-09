@@ -4,6 +4,7 @@ import "./globals.css";
 import { getMenu } from "@/lib/shopify";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
       >
         <Navbar menu={navbarMenu} />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pt-20 lg:pt-24">{children}</main>
+        <Toaster />
         <Footer menu={footerMenu} />
       </body>
     </html>

@@ -1,8 +1,22 @@
-import { Menu, ShopifyMenuItem, ShopiMenuOperation } from "./types";
+import {
+  Connection,
+  Image,
+  Menu,
+  Product,
+  ShopifyMenuItem,
+  ShopifyProduct,
+  ShopifyProductsOperation,
+  ShopiMenuOperation,
+} from "./types";
 import { getMenuQuery } from "./queries/menu";
-import { SHOPIFY_GRAPHQL_API_ENDPOINT, TAGS } from "../constants";
+import {
+  HIDDEN_PRODUCT_TAG,
+  SHOPIFY_GRAPHQL_API_ENDPOINT,
+  TAGS,
+} from "../constants";
 import { ensureStartsWith } from "../utils";
 import { isShopifyError } from "../type-guards";
+import { getProductQuery, getProductsQuery } from "./queries/product";
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
   ? ensureStartsWith(process.env.SHOPIFY_STORE_DOMAIN, "https://")
@@ -71,6 +85,67 @@ export const shopifyFetch = async <T>({
   }
 };
 
+const removeEdgesAndNodes = <T>(array: Connection<T>): T[] => {
+  return array.edges.map((edge) => edge?.node);
+};
+
+const reshapeImages = (images: Connection<Image>, productTitle: string) => {
+  const flattend = removeEdgesAndNodes(images);
+
+  return flattend.map((image) => {
+    const filename = image.url.match(/.*\/(.*)\..*/)?.[1];
+
+    return {
+      ...image,
+      altText: image.altText || `${productTitle} - ${filename}`,
+    };
+  });
+};
+
+const reshapeProduct = (
+  product: ShopifyProduct,
+  filterHiddenProducts: boolean = true
+) => {
+  if (
+    !product ||
+    (filterHiddenProducts && product.tags.includes(HIDDEN_PRODUCT_TAG))
+  ) {
+    return undefined;
+  }
+
+  const { images, variants, ...rest } = product;
+
+  return {
+    ...rest,
+    images: reshapeImages(images, product.title),
+    variants: removeEdgesAndNodes(variants),
+  };
+};
+
+const reshapeProducts = (products: ShopifyProduct[]) => {
+  const reshapedProducts = [];
+
+  for (const product of products) {
+    if (product) {
+      const reshapedProduct = reshapeProduct(product);
+
+      if (reshapedProduct) {
+        reshapedProducts.push(reshapedProduct);
+      }
+    }
+  }
+
+  return reshapedProducts;
+};
+
+const slugify = (str: string) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // remove accents
+    .replace(/\s+/g, "-") // spaces to hyphens
+    .replace(/[^\w\\-]+/g, "") // remove special chars
+    .toLowerCase();
+
 export const getMenu = async (handle: string): Promise<Menu[]> => {
   const res = await shopifyFetch<ShopiMenuOperation>({
     query: getMenuQuery,
@@ -78,33 +153,69 @@ export const getMenu = async (handle: string): Promise<Menu[]> => {
     variables: { handle },
   });
 
-  return (
-    res.body?.data?.menu?.items?.map((item: ShopifyMenuItem) => ({
-      title: item.title,
-      path: item.url
-        .replace(domain, "")
-        .replace("/collections", "/search")
-        .replace("/pages", ""),
-      children:
-        item.items?.map((child) => ({
-          title: child.title,
-          path: child.url
-            .replace(domain, "")
-            .replace("/collections", "/search")
-            .replace("/pages", ""),
-          description:
-          child.title === "Toate"
-          ? "Gama completă de ambalaje alimentare"
-          : child.title === "Ambalaje"
-          ? "Caserole, cutii, tăvi — aluminiu, carton, biodegradabile"
-          : child.title === "Pahare"
-          ? "Pahare pentru băuturi calde și reci — carton, plastic, eco"
-          : child.title === "Tacamuri"
-          ? "Furculițe, linguri, cuțite — unică folosință și seturi"
-          : child.title === "Folii"
-          ? "Folii alimentare: stretch, aluminiu, PVC, biodegradabile"
-          : ""        
-        })) || [],
-    })) || []
-  );
+  const buildMenu = (items: ShopifyMenuItem[], parentSlug = ""): Menu[] => {
+    return items.map((item) => {
+      const cleanURL = item.url.replace(domain, "");
+
+      let currentSlug = "";
+
+      if (cleanURL === "/") {
+        currentSlug = ""; // Home page should not have slug
+      } else if (cleanURL.includes("/collections/")) {
+        const rawSlug = cleanURL.replace("/collections/", "").replace("/", "");
+
+        // ✅ Special case for "Toate produsele" or empty slug
+        if (
+          item.title.toLowerCase().includes("toate produsele") ||
+          rawSlug === ""
+        ) {
+          currentSlug = "";
+        } else {
+          currentSlug = slugify(rawSlug);
+        }
+      } else if (cleanURL.includes("/pages/")) {
+        const rawSlug = cleanURL.replace("/pages/", "").replace("/", "");
+        currentSlug = slugify(rawSlug);
+      } else if (cleanURL.includes("/policies/")) {
+        const rawSlug = cleanURL.replace("/policies/", "").replace("/", "");
+        currentSlug = slugify(rawSlug);
+      } else {
+        currentSlug = slugify(item.title);
+      }
+
+      // ✅ Clean path construction (no duplicate slashes)
+      const segments = [parentSlug, currentSlug].filter(Boolean); // remove empty segments
+      const path = `/${segments.join("/")}`;
+
+      return {
+        title: item.title,
+        path,
+        children: item.items ? buildMenu(item.items, segments.join("/")) : [],
+      };
+    });
+  };
+
+  return res.body?.data?.menu?.items ? buildMenu(res.body.data.menu.items) : [];
+};
+
+export const getProducts = async ({
+  query,
+  reverse,
+  sortKey,
+}: {
+  query?: string;
+  reverse?: boolean;
+  sortKey?: string;
+}): Promise<Product[]> => {
+  const res = await shopifyFetch<ShopifyProductsOperation>({
+    query: getProductsQuery, // ✅ Use the correct query
+    tags: [TAGS.products],
+    variables: {
+      query,
+      reverse,
+      sortKey,
+    },
+  });
+
+  return reshapeProducts(removeEdgesAndNodes(res.body.data.products));
 };
