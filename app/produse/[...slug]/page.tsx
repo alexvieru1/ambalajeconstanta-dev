@@ -2,19 +2,22 @@ import { getProducts } from "@/lib/shopify";
 import { defaultSort, sorting } from "@/lib/constants";
 import React from "react";
 
-export default async function CollectionPage({
-  params,
-  searchParams,
-}: {
+type PageProps = {
   params: { slug?: string[] };
   searchParams?: { [key: string]: string | string[] | undefined };
-}) {
-  const { sort } = searchParams as { [key: string]: string };
-  const { sortKey, reverse } = sorting.find((item) => item.slug === sort) || defaultSort;
+};
 
-  // Build the collection handle from params
-  const slugArray = params.slug || [];
-  const handle = slugArray[slugArray.length - 1] || ""; // Get the last part of the slug
+export default async function CollectionPage({ params, searchParams }: PageProps) {
+  const awaitedSearchParams = await searchParams;
+  const awaitedParams = await params;
+
+  const { sort } = (awaitedSearchParams ?? {}) as { [key: string]: string };
+  const { slug = [] } = awaitedParams;
+
+  const { sortKey, reverse } =
+    sorting.find((item) => item.slug === sort) || defaultSort;
+
+  const handle = slug[slug.length - 1] || "";
 
   const query = handle ? `collection:${handle}` : undefined;
 
@@ -25,6 +28,7 @@ export default async function CollectionPage({
       <h1 className="text-2xl font-semibold">
         {handle ? `Colecția: ${handle}` : "Toate Produsele"}
       </h1>
+
       {products.length === 0 ? (
         <p>Nu am găsit produse în această categorie.</p>
       ) : (
