@@ -55,6 +55,8 @@ export const SearchNavbar = ({ onSearchSubmit }: { onSearchSubmit?: () => void }
           autoComplete="off"
           defaultValue={searchParams?.get("q") || ""}
           className="pr-10"
+          enterKeyHint="search" // ✅ add this!
+          inputMode="search"  
         />
       </div>
     </form>

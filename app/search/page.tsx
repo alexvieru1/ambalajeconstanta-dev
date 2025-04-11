@@ -66,7 +66,9 @@ export default async function SearchPage(props: {
         <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {products.map((product) => {
             // ✅ Build product link WITH query param
-            const productLink = `/produse/${product.handle}?from=search&q=${encodeURIComponent(searchValue || "")}`;
+            const productLink = `/produse/${
+              product.handle
+            }?from=search&q=${encodeURIComponent(searchValue || "")}`;
 
             return (
               <ProductCard
