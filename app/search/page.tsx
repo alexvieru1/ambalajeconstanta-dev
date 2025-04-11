@@ -1,16 +1,14 @@
 import { defaultSort, sorting } from "@/lib/constants";
 import { getProducts } from "@/lib/shopify";
-import Image from "next/image";
 import React from "react";
-import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
+import { normalizeString } from "@/lib/utils";
 
 export default async function SearchPage(props: {
   searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { searchParams } = props;
 
-  // ✅ Await searchParams to safely access properties
   const awaitedSearchParams = await searchParams;
   const sort =
     typeof awaitedSearchParams?.sort === "string"
@@ -24,11 +22,21 @@ export default async function SearchPage(props: {
   const { sortKey, reverse } =
     sorting.find((item) => item.slug === sort) || defaultSort;
 
-  const products = await getProducts({
+  let products = await getProducts({
     sortKey,
     reverse,
-    query: searchValue,
+    query: "availableForSale:true",
   });
+
+  // ✅ Normalize search term and products for diacritics-free matching
+  if (searchValue) {
+    const normalizedSearch = normalizeString(searchValue);
+
+    products = products.filter((product) => {
+      const normalizedTitle = normalizeString(product.title);
+      return normalizedTitle.includes(normalizedSearch);
+    });
+  }
 
   const resultsText = products.length === 1 ? "rezultat" : "rezultate";
 
@@ -53,16 +61,9 @@ export default async function SearchPage(props: {
       {/* Products grid */}
       {products.length > 0 ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {products.map((product) => {
-            const prices = product.variants.map((variant) =>
-              parseFloat(variant.price.amount)
-            );
-            const minPrice = Math.min(...prices).toFixed(2);
-
-            return (
-              <ProductCard key={product.id} product={product} />
-            );
-          })}
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       ) : (
         searchValue && (

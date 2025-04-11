@@ -21,3 +21,18 @@ export const createUrl = (
 
   return `${pathname}${queryString}`
 };
+
+/**
+ * Normalizes a string by:
+ * - lowercasing
+ * - removing diacritics (accents)
+ * - trimming spaces
+ */
+export function normalizeString(str: string): string {
+  return str
+    .toLowerCase()
+    .normalize("NFD") // separate base characters and diacritics
+    .replace(/[\u0300-\u036f]/g, "") // remove diacritics
+    .replace(/\s+/g, " ") // normalize spaces
+    .trim();
+}

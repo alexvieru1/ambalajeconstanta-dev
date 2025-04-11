@@ -15,12 +15,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { IconShoppingCartPlus } from "@tabler/icons-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 type ProductCardProps = {
   product: Product;
+  href?: string; // ✅ optional href
 };
 
-export const ProductCard = ({ product }: ProductCardProps) => {
+export const ProductCard = ({ product, href }: ProductCardProps) => {
   const [selectedVariantId, setSelectedVariantId] = useState<string>(
     product.variants[0]?.id || ""
   );
@@ -49,41 +51,56 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
   const cleanProductId = product.id.split("/").pop();
   const hasMultipleVariants = product.variants.length > 1;
-  const selectedVariant = product.variants.find(
-    (variant) => variant.id === selectedVariantId
+  const isAvailable = product.variants.some(
+    (variant) => variant.availableForSale
   );
 
   return (
-    <Card className="flex flex-col items-center p-4 shadow-sm hover:shadow-md transition">
+    <Card className="relative flex flex-col items-center p-4 shadow-sm hover:shadow-md transition">
       {/* Image */}
       <div className="relative w-full h-48 mb-4">
         {product.images[0] && (
-          <Image
-            src={product.images[0].url}
-            alt={product.images[0].altText || product.title}
-            fill
-            className="object-contain"
-            sizes="(max-width: 768px) 100vw, 33vw"
-          />
+          <>
+            {href ? (
+              <Link
+                href={href}
+                aria-label={`Vezi detalii pentru ${product.title}`}
+                className="absolute inset-0 z-10"
+              >
+                <Image
+                  src={product.images[0].url}
+                  alt={product.images[0].altText || product.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                />
+              </Link>
+            ) : (
+              <Image
+                src={product.images[0].url}
+                alt={product.images[0].altText || product.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 33vw"
+              />
+            )}
+          </>
         )}
       </div>
 
       {/* Content */}
-      <CardContent className="w-full text-center space-y-2">
-        {/* Title */}
+      <CardContent className="w-full text-center space-y-2 z-10">
         <h3 className="text-sm font-medium">{product.title}</h3>
 
-        {/* Product Code */}
         <p className="text-xs text-gray-500">Cod produs: {cleanProductId}</p>
 
-        {/* Price */}
         <p className="text-sm text-green-600 font-semibold">
           {hasMultipleVariants
             ? `De la ${product.priceRange.minVariantPrice.amount} RON`
             : `Preț: ${product.variants[0]?.price.amount} RON`}
         </p>
 
-        {/* Variant Selector (if multiple) */}
+        {/* Variant Selector */}
         {hasMultipleVariants && (
           <div className="flex justify-center items-center">
             <Select
@@ -110,6 +127,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             type="button"
             size="icon"
             variant="outline"
+            disabled={!isAvailable}
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
           >
             -
@@ -117,6 +135,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
           <Input
             type="number"
             value={quantity}
+            disabled={!isAvailable}
             onChange={(e) =>
               setQuantity(Math.max(1, parseInt(e.target.value) || 1))
             }
@@ -127,6 +146,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
             type="button"
             size="icon"
             variant="outline"
+            disabled={!isAvailable}
             onClick={() => setQuantity(quantity + 1)}
           >
             +
@@ -134,13 +154,23 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         </div>
 
         {/* Add to Cart */}
-        <Button
-          type="button"
-          className="w-1/2 bg-green-600 mt-2"
-          onClick={handleAddToCart}
-        >
-          <IconShoppingCartPlus className="w-4 h-4 mr-2" />
-        </Button>
+        {isAvailable ? (
+          <Button
+            type="button"
+            className="w-1/2 bg-green-600 mt-2"
+            onClick={handleAddToCart}
+          >
+            <IconShoppingCartPlus className="w-4 h-4 mr-2" />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            className="w-1/2 bg-gray-400 mt-2 cursor-not-allowed"
+            disabled
+          >
+            Stoc epuizat
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

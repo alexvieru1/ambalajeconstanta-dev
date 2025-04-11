@@ -9,6 +9,7 @@ import {
   ShopifyCollectionsOperation,
   ShopifyMenuItem,
   ShopifyProduct,
+  ShopifyProductOperation,
   ShopifyProductsOperation,
   ShopiMenuOperation,
 } from "./types";
@@ -20,7 +21,7 @@ import {
 } from "../constants";
 import { ensureStartsWith } from "../utils";
 import { isShopifyError } from "../type-guards";
-import { getProductsQuery } from "./queries/product";
+import { getProductQuery, getProductsQuery } from "./queries/product";
 import {
   getCollectionProductsQuery,
   getCollectionsQuery,
@@ -353,4 +354,16 @@ export const getCollectionProducts = async ({
   return reshapeProducts(
     removeEdgesAndNodes(res.body.data.collection.products)
   );
+};
+
+export const getProductByHandle = async (handle: string): Promise<Product | undefined> => {
+  const res = await shopifyFetch<ShopifyProductOperation>({
+    query: getProductQuery,
+    variables: { handle },
+    tags: [TAGS.products],
+  });
+
+  if (!res.body?.data?.product) return undefined;
+
+  return reshapeProduct(res.body.data.product);
 };
