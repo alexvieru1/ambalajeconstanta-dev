@@ -1,8 +1,12 @@
 import {
+  Collection,
   Connection,
   Image,
   Menu,
   Product,
+  ShopifyCollection,
+  ShopifyCollectionProductsOperation,
+  ShopifyCollectionsOperation,
   ShopifyMenuItem,
   ShopifyProduct,
   ShopifyProductsOperation,
@@ -16,7 +20,11 @@ import {
 } from "../constants";
 import { ensureStartsWith } from "../utils";
 import { isShopifyError } from "../type-guards";
-import { getProductQuery, getProductsQuery } from "./queries/product";
+import { getProductsQuery } from "./queries/product";
+import {
+  getCollectionProductsQuery,
+  getCollectionsQuery,
+} from "./queries/collection";
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
   ? ensureStartsWith(process.env.SHOPIFY_STORE_DOMAIN, "https://")
@@ -198,6 +206,45 @@ export const getMenu = async (handle: string): Promise<Menu[]> => {
   return res.body?.data?.menu?.items ? buildMenu(res.body.data.menu.items) : [];
 };
 
+export const getProduseMenu = async (): Promise<Menu[]> => {
+  const [menuRes, collections] = await Promise.all([
+    shopifyFetch<ShopiMenuOperation>({
+      query: getMenuQuery,
+      tags: [TAGS.collections],
+      variables: { handle: "nextjs-produse-menu" },
+    }),
+    getCollections(), // ✅ Fetch collections to get images
+  ]);
+
+  const collectionsMap = new Map<string, Collection>();
+  collections.forEach((collection) => {
+    collectionsMap.set(collection.handle, collection);
+  });
+
+  const buildMenu = (items: ShopifyMenuItem[], parentSlug = ""): Menu[] => {
+    return items.map((item) => {
+      const cleanURL = item.url.replace(domain, "");
+      const slug = slugify(cleanURL.replace("/collections/", "").replace("/", ""));
+      const path = `/produse/${[parentSlug, slug].filter(Boolean).join("/")}`;
+
+      const collection = collectionsMap.get(slug);
+
+      return {
+        title: item.title,
+        path,
+        image: collection?.image, // ✅ Attach image if exists
+        children: item.items
+          ? buildMenu(item.items, [parentSlug, slug].filter(Boolean).join("/"))
+          : [],
+      };
+    });
+  };
+
+  return menuRes.body?.data?.menu?.items
+    ? buildMenu(menuRes.body.data.menu.items)
+    : [];
+};
+
 export const getProducts = async ({
   query,
   reverse,
@@ -218,4 +265,92 @@ export const getProducts = async ({
   });
 
   return reshapeProducts(removeEdgesAndNodes(res.body.data.products));
+};
+
+const reshapeCollection = (
+  collection: ShopifyCollection,
+  basePath: string = "/produse"
+): Collection | undefined => {
+  if (!collection) return undefined;
+
+  return {
+    ...collection,
+    path: `${basePath}/${collection.handle}`,
+  };
+};
+
+export const reshapeCollections = (collections: ShopifyCollection[]) => {
+  const reshapedCollections = [];
+
+  for (const collection of collections) {
+    if (collection) {
+      const reshapedCollection = reshapeCollection(collection);
+
+      if (reshapedCollection) {
+        reshapedCollections.push(reshapedCollection);
+      }
+    }
+  }
+
+  return reshapedCollections;
+};
+
+export const getCollections = async (): Promise<Collection[]> => {
+  const res = await shopifyFetch<ShopifyCollectionsOperation>({
+    query: getCollectionsQuery,
+    tags: [TAGS.collections],
+  });
+
+  const shopifyCollections = removeEdgesAndNodes(res?.body?.data?.collections);
+
+  const collections = [
+    {
+      handle: "",
+      title: "All",
+      description: "All products",
+      seo: {
+        title: "All",
+        description: "All products",
+      },
+      path: "/produse",
+      updatedAt: new Date().toISOString(),
+      image: undefined,
+    },
+    ...reshapeCollections(
+      shopifyCollections.filter(
+        (collection) => !collection.handle.startsWith("hidden")
+      )
+    ),
+  ];
+
+  return collections;
+};
+
+export const getCollectionProducts = async ({
+  collection,
+  reverse,
+  sortKey,
+}: {
+  collection: string;
+  reverse?: boolean;
+  sortKey?: string;
+}): Promise<Product[]> => {
+  const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
+    query: getCollectionProductsQuery,
+    tags: [TAGS.collections, TAGS.products],
+    variables: {
+      handle: collection,
+      reverse,
+      sortKey: sortKey === "CREATED_AT" ? "CREATED" : sortKey,
+    },
+  });
+
+  if (!res.body.data.collection) {
+    console.log(`No collection found for \`${collection}\``);
+    return [];
+  }
+
+  return reshapeProducts(
+    removeEdgesAndNodes(res.body.data.collection.products)
+  );
 };

@@ -3,6 +3,7 @@ export type Menu = {
   path: string;
   description?: string;
   children?: Menu[];
+  image?: Image;
 };
 
 export type ShopifyMenuItem = {
@@ -97,5 +98,44 @@ export type ShopifyProductsOperation = {
     query?: string;
     reverse?: boolean;
     sortKey?: string;
+  };
+};
+
+export type ShopifyCollection = {
+  handle: string;
+  title: string;
+  description: string;
+  seo: SEO;
+  updatedAt: string;
+  image?: Image;
+};
+
+export type Collection = ShopifyCollection & {
+  path: string;
+};
+
+export type ShopifyCollectionsOperation = {
+  data: {
+    collections: Connection<ShopifyCollection>;
+  };
+};
+
+export type ShopifyCollectionProductsOperation = {
+  data: {
+    collection: {
+      products: Connection<ShopifyProduct>;
+    };
+  };
+  variables: {
+    handle: string;
+    reverse?: boolean;
+    sortKey?: string;
+  };
+};
+
+export type ShopifyProductOperation = {
+  data: { product: ShopifyProduct };
+  variables: {
+    handle: string;
   };
 };
