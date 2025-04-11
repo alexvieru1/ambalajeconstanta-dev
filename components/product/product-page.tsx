@@ -3,15 +3,18 @@ import { CategoryBreadcrumb } from "@/components/category-breadcrumb";
 import Image from "next/image";
 
 export const ProductPage = ({
-  product,
-  slugArray,
-}: {
-  product: Product;
-  slugArray: string[];
-}) => {
+    product,
+    slugArray,
+    searchQuery, // ✅ Add this
+  }: {
+    product: Product;
+    slugArray: string[];
+    searchQuery?: string; // ✅ Optional
+  }) => {
+  
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
-      <CategoryBreadcrumb slugArray={slugArray} />
+      <CategoryBreadcrumb slugArray={slugArray} searchQuery={searchQuery} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
           {product.images[0] && (

@@ -7,7 +7,7 @@ import React from "react";
 import { Skeleton } from "../ui/skeleton";
 import { createUrl } from "@/lib/utils";
 
-export const SearchNavbar = () => {
+export const SearchNavbar = ({ onSearchSubmit }: { onSearchSubmit?: () => void }) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -25,14 +25,28 @@ export const SearchNavbar = () => {
     }
 
     router.push(createUrl("/search", newParams));
+
+    // ✅ Close the menu after search submit
+    onSearchSubmit?.();
+  };
+
+  const handleIconClick = () => {
+    const form = document.querySelector('form');
+    if (form) {
+      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    }
   };
 
   return (
     <form onSubmit={onSubmit}>
       <div className="relative w-full">
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <button
+          type="submit"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+          onClick={handleIconClick}
+        >
           <IconSearch size={18} />
-        </span>
+        </button>
         <Input
           key={searchParams?.get("q")}
           type="text"

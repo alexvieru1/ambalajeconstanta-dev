@@ -21,6 +21,9 @@ export default async function CollectionOrProductPage(props: {
   const awaitedParams = await params;
   const slugArray = awaitedParams.slug || [];
 
+  const searchQuery = (await searchParams)?.q as string | undefined;
+  const fromSearch = (await searchParams)?.from === "search";
+
   const search = await searchParams;
   const sort = typeof search?.sort === "string" ? search.sort : undefined;
   const { sortKey, reverse } =
@@ -30,9 +33,14 @@ export default async function CollectionOrProductPage(props: {
 
   // 🧩 Step 1: Try to fetch product by handle (last slug)
   const productData = await getProductByHandle(handle);
-
   if (productData) {
-    return <ProductPage product={productData} slugArray={slugArray} />;
+    return (
+      <ProductPage
+        product={productData}
+        slugArray={fromSearch ? ["search"] : slugArray}
+        searchQuery={fromSearch ? searchQuery : undefined} // ✅ Important!
+      />
+    );
   }
 
   // 🧩 Step 2: No product found, try category view
@@ -54,7 +62,10 @@ export default async function CollectionOrProductPage(props: {
   if (currentMenu?.children && currentMenu.children.length > 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
-        <CategoryBreadcrumb slugArray={slugArray} />
+        <CategoryBreadcrumb
+          slugArray={fromSearch ? ["search"] : slugArray}
+          searchQuery={fromSearch ? searchQuery : undefined}
+        />
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
           {currentMenu.children.map((item) => (
             <Link
@@ -98,7 +109,10 @@ export default async function CollectionOrProductPage(props: {
   if (products.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
-        <CategoryBreadcrumb slugArray={slugArray} />
+        <CategoryBreadcrumb
+          slugArray={fromSearch ? ["search"] : slugArray}
+          searchQuery={fromSearch ? searchQuery : undefined}
+        />
         <p>Nu am găsit produse în această categorie.</p>
       </div>
     );
@@ -106,7 +120,10 @@ export default async function CollectionOrProductPage(props: {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
-      <CategoryBreadcrumb slugArray={slugArray} />
+      <CategoryBreadcrumb
+        slugArray={fromSearch ? ["search"] : slugArray}
+        searchQuery={fromSearch ? searchQuery : undefined}
+      />
       <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4 p-4">
         {products.map((product) => {
           const productSlug = product.handle;

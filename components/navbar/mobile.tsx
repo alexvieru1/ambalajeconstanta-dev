@@ -94,7 +94,7 @@ const MobileNavbar = ({ menu }: MobileNavbarProps) => {
             <div className="flex flex-col p-4 space-y-2 max-h-[calc(100vh-60px)] overflow-y-auto">
               {/* Search */}
               <Suspense fallback={<SearchSkeleton />}>
-                <SearchNavbar />
+                <SearchNavbar onSearchSubmit={() => setIsOpen(false)} />
               </Suspense>
 
               {/* Menu Items */}

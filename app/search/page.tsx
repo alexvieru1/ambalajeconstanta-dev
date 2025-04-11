@@ -1,5 +1,5 @@
 import { defaultSort, sorting } from "@/lib/constants";
-import { getProducts } from "@/lib/shopify";
+import { getProducts, getProduseMenu } from "@/lib/shopify";
 import React from "react";
 import { ProductCard } from "@/components/product/product-card";
 import { normalizeString } from "@/lib/utils";
@@ -38,6 +38,9 @@ export default async function SearchPage(props: {
     });
   }
 
+  // ✅ Fetch menu for paths (optional but you already have it)
+  const menu = await getProduseMenu();
+
   const resultsText = products.length === 1 ? "rezultat" : "rezultate";
 
   return (
@@ -60,10 +63,19 @@ export default async function SearchPage(props: {
 
       {/* Products grid */}
       {products.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {products.map((product) => {
+            // ✅ Build product link WITH query param
+            const productLink = `/produse/${product.handle}?from=search&q=${encodeURIComponent(searchValue || "")}`;
+
+            return (
+              <ProductCard
+                key={product.id}
+                product={product}
+                href={productLink}
+              />
+            );
+          })}
         </div>
       ) : (
         searchValue && (
