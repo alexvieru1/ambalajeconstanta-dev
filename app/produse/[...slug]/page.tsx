@@ -7,8 +7,8 @@ import { Menu } from "@/lib/shopify/types";
 import { CategoryBreadcrumb } from "@/components/category-breadcrumb";
 
 export default async function CollectionPage(props: {
-  params: { slug?: string[] };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: Promise<{ slug?: string[] }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { params, searchParams } = await props;
 

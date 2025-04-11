@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
 
 export default async function SearchPage(props: {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { searchParams } = props;
 
