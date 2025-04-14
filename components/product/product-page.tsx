@@ -8,6 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { IconShoppingCartPlus, IconZoomIn } from "@tabler/icons-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const ProductPage = ({
   product,
@@ -20,6 +34,9 @@ export const ProductPage = ({
 }) => {
   const [quantity, setQuantity] = useState<number>(1);
   const [showZoom, setShowZoom] = useState<boolean>(false);
+  const [selectedVariantId, setSelectedVariantId] = useState<string>(
+    product.variants[0]?.id || ""
+  );
 
   const getMetafield = (product: Product, namespace: string, key: string) => {
     return product.metafields?.find(
@@ -32,6 +49,10 @@ export const ProductPage = ({
   const hasMultipleVariants = product.variants.length > 1;
   const isAvailable = product.variants.some(
     (variant) => variant.availableForSale
+  );
+
+  const selectedVariant = product.variants.find(
+    (variant) => variant.id === selectedVariantId
   );
 
   const handleAddToCart = () => {
@@ -52,23 +73,46 @@ export const ProductPage = ({
     );
   };
 
+  console.log(product)
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
       <CategoryBreadcrumb slugArray={slugArray} searchQuery={searchQuery} />
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Product Image */}
+        {/* Product Images or Carousel */}
         <div className="relative w-full">
-          <div className="relative w-full h-96 rounded-lg overflow-hidden">
-            {product.images[0] && (
-              <Image
-                src={product.images[0].url}
-                alt={product.images[0].altText || product.title}
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 50vw"
-              />
-            )}
-          </div>
+          {product.images.length > 1 ? (
+            <Carousel>
+              <CarouselContent>
+                {product.images.map((image) => (
+                  <CarouselItem key={image.url} className="relative h-96">
+                    <Image
+                      src={image.url}
+                      alt={image.altText || product.title}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          ) : (
+            product.images[0] && (
+              <div className="relative w-full h-96 rounded-lg overflow-hidden">
+                <Image
+                  src={product.images[0].url}
+                  alt={product.images[0].altText || product.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+            )
+          )}
 
           {/* Zoom Button */}
           {product.images[0] && (
@@ -93,9 +137,7 @@ export const ProductPage = ({
           </p>
 
           {unit && (
-            <p className="text-sm text-gray-500">
-              Unitate de măsură: {unit}
-            </p>
+            <p className="text-sm text-gray-500">Unitate de măsură: {unit}</p>
           )}
 
           <p className="text-[#44b74a] font-semibold">
@@ -103,6 +145,27 @@ export const ProductPage = ({
               ? `De la ${product.priceRange.minVariantPrice.amount} RON`
               : `${product.variants[0]?.price.amount} RON`}
           </p>
+
+          {/* Variant Selector */}
+          {hasMultipleVariants && (
+            <div className="flex flex-col">
+              <Select
+                defaultValue={product.variants[0]?.id}
+                onValueChange={(value) => setSelectedVariantId(value)}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Selectează o variantă" />
+                </SelectTrigger>
+                <SelectContent>
+                  {product.variants.map((variant) => (
+                    <SelectItem key={variant.id} value={variant.id}>
+                      {variant.title} — {variant.price.amount} RON
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Quantity Selector */}
           <div className="flex items-center space-x-2">
@@ -171,21 +234,50 @@ export const ProductPage = ({
 
       {/* Modal for zoom */}
       {showZoom && (
-        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
-          <div className="relative w-full h-full md:w-2/3 md:h-2/3">
-            <Image
-              src={product.images[0].url}
-              alt={product.images[0].altText || product.title}
-              fill
-              className="object-contain"
-            />
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="relative bg-white rounded-lg max-w-4xl w-full p-4 mx-4">
+            {product.images.length > 1 ? (
+              <Carousel>
+                <CarouselContent>
+                  {product.images.map((image) => (
+                    <CarouselItem
+                      key={image.url}
+                      className="flex items-center justify-center"
+                    >
+                      <div className="relative w-full h-[60vh]">
+                        <Image
+                          src={image.url}
+                          alt={image.altText || product.title}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, 50vw"
+                        />
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
+            ) : (
+              <div className="relative w-full h-[60vh] flex items-center justify-center">
+                <Image
+                  src={product.images[0].url}
+                  alt={product.images[0].altText || product.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
+              </div>
+            )}
+
             <Button
               type="button"
               size="sm"
               className="absolute top-4 right-4 bg-white text-black hover:bg-gray-500"
               onClick={() => setShowZoom(false)}
             >
-              Închide
+              X
             </Button>
           </div>
         </div>
