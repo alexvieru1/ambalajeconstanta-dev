@@ -213,7 +213,7 @@ export const ProductPage = ({
                   .sort(([a], [b]) => Number(a) - Number(b))
                   .map(([qty, price]) => (
                     <li key={qty}>
-                      {qty} buc: {price} RON
+                      {qty} {unit}: {price} RON
                     </li>
                   ))}
               </ul>
