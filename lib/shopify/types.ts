@@ -45,6 +45,7 @@ export type ProductVariant = {
     value: string;
   }[];
   price: Money;
+  metafields?: Metafield;
 };
 
 export type ProductOption = {
@@ -95,6 +96,7 @@ export type ShopifyProduct = {
 export type Product = Omit<ShopifyProduct, "variants" | "images"> & {
   variants: ProductVariant[];
   images: Image[];
+  metafields?: Metafield[]; // ✅ Add here as well, good practice
 };
 
 export type ShopifyProductsOperation = {

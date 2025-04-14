@@ -38,6 +38,11 @@ export const productFragment = /* GraphQl */ `
             amount
             currencyCode
           }
+          metafields(identifiers: [{ namespace: "pricing", key: "quantity_breaks" }]) {
+            namespace
+            key
+            value
+          }
         }
       }
     }

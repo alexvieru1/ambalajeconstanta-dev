@@ -122,12 +122,13 @@ const reshapeProduct = (
     return undefined;
   }
 
-  const { images, variants, ...rest } = product;
+  const { images, variants, metafields, ...rest } = product;
 
   return {
     ...rest,
     images: reshapeImages(images, product.title),
     variants: removeEdgesAndNodes(variants),
+    metafields: Array.isArray(metafields) ? metafields : [], // ✅ 100% safe
   };
 };
 
@@ -225,7 +226,9 @@ export const getProduseMenu = async (): Promise<Menu[]> => {
   const buildMenu = (items: ShopifyMenuItem[], parentSlug = ""): Menu[] => {
     return items.map((item) => {
       const cleanURL = item.url.replace(domain, "");
-      const slug = slugify(cleanURL.replace("/collections/", "").replace("/", ""));
+      const slug = slugify(
+        cleanURL.replace("/collections/", "").replace("/", "")
+      );
       const path = `/produse/${[parentSlug, slug].filter(Boolean).join("/")}`;
 
       const collection = collectionsMap.get(slug);
@@ -356,7 +359,9 @@ export const getCollectionProducts = async ({
   );
 };
 
-export const getProductByHandle = async (handle: string): Promise<Product | undefined> => {
+export const getProductByHandle = async (
+  handle: string
+): Promise<Product | undefined> => {
   const res = await shopifyFetch<ShopifyProductOperation>({
     query: getProductQuery,
     variables: { handle },
