@@ -94,7 +94,7 @@ export const ProductCard = ({ product, href }: ProductCardProps) => {
 
         <p className="text-xs text-gray-500">Cod produs: {cleanProductId}</p>
 
-        <p className="text-sm text-green-600 font-semibold">
+        <p className="text-sm text-[#44b74a] font-semibold">
           {hasMultipleVariants
             ? `De la ${product.priceRange.minVariantPrice.amount} RON`
             : `Preț: ${product.variants[0]?.price.amount} RON`}
@@ -157,7 +157,7 @@ export const ProductCard = ({ product, href }: ProductCardProps) => {
         {isAvailable ? (
           <Button
             type="button"
-            className="w-1/2 bg-green-600 mt-2"
+            className="w-1/2 bg-[#44b74a] mt-2"
             onClick={handleAddToCart}
           >
             <IconShoppingCartPlus className="w-4 h-4 mr-2" />

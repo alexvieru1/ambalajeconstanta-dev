@@ -39,7 +39,7 @@ export default async function ProdusePage() {
               )}
 
               <div className="p-3 text-center">
-                <h3 className="text-sm font-medium text-gray-900 group-hover:text-green-600 transition">
+                <h3 className="text-sm font-medium text-gray-900 group-hover:text-[#44b74a] transition">
                   {item.title}
                 </h3>
               </div>

@@ -48,7 +48,7 @@ export function CategoryBreadcrumb({
                 ? `/search?q=${encodeURIComponent(searchQuery || "")}`
                 : "/produse"
             }
-            className="hover:text-green-600 transition-colors"
+            className="hover:text-[#44b74a] transition-colors"
           >
             {isSearch ? "Căutare" : "Produse"}
           </Link>
@@ -62,7 +62,7 @@ export function CategoryBreadcrumb({
             <BreadcrumbLink asChild>
               <Link
                 href={buildHref(index + 1)} // shift index because we slice(1)
-                className="hover:text-green-600 transition-colors capitalize"
+                className="hover:text-[#44b74a] transition-colors capitalize"
               >
                 {capitalizeWords(decodeURIComponent(slug))}
               </Link>

@@ -1,11 +1,15 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import React, { Suspense, useState, useRef, useEffect } from "react";
 import { Menu } from "@/lib/shopify/types";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { SearchNavbar, SearchSkeleton } from "./search";
-import { IconShoppingCart, IconChevronDown } from "@tabler/icons-react";
+import {
+  IconShoppingCart,
+  IconChevronDown,
+  IconSearch,
+} from "@tabler/icons-react";
 import { Logo } from "../logo";
 
 type MobileNavbarProps = {
@@ -25,6 +29,8 @@ const Path = (props: any) => (
 const MobileNavbar = ({ menu }: MobileNavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null!);
 
   const toggleMenu = (title: string) => {
     setOpenMenus((prev) =>
@@ -36,52 +42,106 @@ const MobileNavbar = ({ menu }: MobileNavbarProps) => {
 
   const filteredMenu = menu.filter((item) => item.title !== "Acasa");
 
+  // ✅ Auto-focus input when search opens
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  // ✅ Close search when menu opens
+  useEffect(() => {
+    if (isOpen && searchOpen) {
+      setSearchOpen(false);
+    }
+  }, [isOpen, searchOpen]);
+
   return (
     <div className="fixed top-0 left-0 right-0 md:hidden px-4 py-3 flex items-center justify-between border-b z-50 bg-white">
-      {/* Hamburger Menu */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="text-black focus:outline-none"
-        aria-label="Toggle menu"
-      >
-        <motion.svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          animate={isOpen ? "open" : "closed"}
-          initial={false}
+      <div>
+        {/* Hamburger Menu */}
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="text-black focus:outline-none"
+          aria-label="Toggle menu"
         >
-          <Path
-            variants={{
-              closed: { d: "M 2 5 L 22 5" },
-              open: { d: "M 4 4 L 20 20" },
-            }}
-          />
-          <Path
-            variants={{
-              closed: { d: "M 2 12 L 22 12", opacity: 1 },
-              open: { opacity: 0 },
-            }}
-            transition={{ duration: 0.1 }}
-          />
-          <Path
-            variants={{
-              closed: { d: "M 2 19 L 22 19" },
-              open: { d: "M 4 20 L 20 4" },
-            }}
-          />
-        </motion.svg>
-      </button>
+          <motion.svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            animate={isOpen ? "open" : "closed"}
+            initial={false}
+          >
+            <Path
+              variants={{
+                closed: { d: "M 2 5 L 22 5" },
+                open: { d: "M 4 4 L 20 20" },
+              }}
+            />
+            <Path
+              variants={{
+                closed: { d: "M 2 12 L 22 12", opacity: 1 },
+                open: { opacity: 0 },
+              }}
+              transition={{ duration: 0.1 }}
+            />
+            <Path
+              variants={{
+                closed: { d: "M 2 19 L 22 19" },
+                open: { d: "M 4 20 L 20 4" },
+              }}
+            />
+          </motion.svg>
+        </button>
+        {/* Search Icon */}
+        <button
+          onClick={() => {
+            if (isOpen) {
+              setIsOpen(false);
+              // Small delay to allow menu to close first
+              setTimeout(() => setSearchOpen(true), 250);
+            } else {
+              setSearchOpen(!searchOpen);
+            }
+          }}
+          className="text-gray-600 focus:outline-none ml-4"
+          aria-label="Toggle search"
+        >
+          <IconSearch className="w-6 h-6" />
+        </button>
+      </div>
 
       {/* LOGO */}
       <Logo />
 
       {/* Shopping Cart */}
       <Link href="/cart">
-        <IconShoppingCart className="w-6 h-6 text-gray-600" />
+        <IconShoppingCart className="w-6 h-6 text-gray-600 ml-2" />
       </Link>
 
-      {/* MENU CONTENT */}
+      {/* Animated Search */}
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute top-full left-0 w-full bg-white border-t shadow-md z-40"
+          >
+            <div className="p-4">
+              <Suspense fallback={<SearchSkeleton />}>
+                <SearchNavbar
+                  onSearchSubmit={() => setSearchOpen(false)}
+                  inputRef={searchInputRef}
+                />
+              </Suspense>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Animated Menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -92,12 +152,6 @@ const MobileNavbar = ({ menu }: MobileNavbarProps) => {
             className="absolute top-full left-0 w-full bg-white border-t shadow-md z-40"
           >
             <div className="flex flex-col p-4 space-y-2 max-h-[calc(100vh-60px)] overflow-y-auto">
-              {/* Search */}
-              <Suspense fallback={<SearchSkeleton />}>
-                <SearchNavbar onSearchSubmit={() => setIsOpen(false)} />
-              </Suspense>
-
-              {/* Menu Items */}
               {filteredMenu.map((item) => (
                 <div key={item.title} className="space-y-1">
                   <div className="flex items-center justify-between">

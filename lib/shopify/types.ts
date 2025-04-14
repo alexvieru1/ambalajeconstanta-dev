@@ -65,6 +65,12 @@ export type SEO = {
   description: string;
 };
 
+export type Metafield = {
+  namespace: string;
+  key: string;
+  value: string;
+};
+
 export type ShopifyProduct = {
   id: string;
   handle: string;
@@ -83,6 +89,7 @@ export type ShopifyProduct = {
   seo: SEO;
   tags: string[];
   updatedAt: string;
+  metafields?: Metafield[]; // ✅ Add this line!
 };
 
 export type Product = Omit<ShopifyProduct, "variants" | "images"> & {

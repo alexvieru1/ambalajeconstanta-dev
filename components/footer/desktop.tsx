@@ -61,7 +61,7 @@ export const DesktopFooter = ({ menu }: FooterProps) => {
       </div>
 
       {/* Bottom stripe */}
-      <div className="border-t mt-10 py-4 bg-green-600 text-white text-center text-sm">
+      <div className="border-t mt-10 py-4 bg-[#44b74a] text-white text-center text-sm">
         © {currentYear} AMBALAJE CONSTANȚA. Toate drepturile rezervate.
       </div>
     </footer>

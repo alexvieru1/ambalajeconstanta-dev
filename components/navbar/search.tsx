@@ -7,7 +7,13 @@ import React from "react";
 import { Skeleton } from "../ui/skeleton";
 import { createUrl } from "@/lib/utils";
 
-export const SearchNavbar = ({ onSearchSubmit }: { onSearchSubmit?: () => void }) => {
+export const SearchNavbar = ({
+  onSearchSubmit,
+  inputRef, // ✅ add here
+}: {
+  onSearchSubmit?: () => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
+}) => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -31,9 +37,11 @@ export const SearchNavbar = ({ onSearchSubmit }: { onSearchSubmit?: () => void }
   };
 
   const handleIconClick = () => {
-    const form = document.querySelector('form');
+    const form = document.querySelector("form");
     if (form) {
-      form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      form.dispatchEvent(
+        new Event("submit", { bubbles: true, cancelable: true })
+      );
     }
   };
 
@@ -56,7 +64,8 @@ export const SearchNavbar = ({ onSearchSubmit }: { onSearchSubmit?: () => void }
           defaultValue={searchParams?.get("q") || ""}
           className="pr-10"
           enterKeyHint="search" // ✅ add this!
-          inputMode="search"  
+          inputMode="search"
+          ref={inputRef}
         />
       </div>
     </form>

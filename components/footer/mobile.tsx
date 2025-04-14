@@ -57,7 +57,7 @@ const MobileFooter = ({ menu }: FooterProps) => {
       </div>
 
       {/* Bottom stripe */}
-      <div className="border-t mt-6 py-4 bg-green-600 text-white text-center text-xs">
+      <div className="border-t mt-6 py-4 bg-[#44b74a] text-white text-center text-xs">
         © {currentYear} AMBALAJE CONSTANȚA. Toate drepturile rezervate.
       </div>
     </footer>

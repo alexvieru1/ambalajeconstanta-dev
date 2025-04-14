@@ -2,7 +2,7 @@ import imageFragment from "./image";
 import seoFragment from "./seo";
 
 export const productFragment = /* GraphQl */ `
-    fragment product on Product {
+  fragment product on Product {
     id
     handle
     availableForSale
@@ -56,7 +56,12 @@ export const productFragment = /* GraphQl */ `
     }
     tags
     updatedAt
+    metafields(identifiers: [{ namespace: "custom", key: "unitate_masura" }]) {
+      namespace
+      key
+      value
     }
-    ${imageFragment}
-    ${seoFragment}
+  }
+  ${imageFragment}
+  ${seoFragment}
 `;

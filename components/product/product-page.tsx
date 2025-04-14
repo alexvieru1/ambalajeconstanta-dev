@@ -1,45 +1,195 @@
+"use client";
+
+import { useState } from "react";
 import { Product } from "@/lib/shopify/types";
 import { CategoryBreadcrumb } from "@/components/category-breadcrumb";
 import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { IconShoppingCartPlus, IconZoomIn } from "@tabler/icons-react";
 
 export const ProductPage = ({
-    product,
-    slugArray,
-    searchQuery, // ✅ Add this
-  }: {
-    product: Product;
-    slugArray: string[];
-    searchQuery?: string; // ✅ Optional
-  }) => {
-  
+  product,
+  slugArray,
+  searchQuery,
+}: {
+  product: Product;
+  slugArray: string[];
+  searchQuery?: string;
+}) => {
+  const [quantity, setQuantity] = useState<number>(1);
+  const [showZoom, setShowZoom] = useState<boolean>(false);
+
+  const getMetafield = (product: Product, namespace: string, key: string) => {
+    return product.metafields?.find(
+      (field) => field.namespace === namespace && field.key === key
+    )?.value;
+  };
+
+  const unit = getMetafield(product, "custom", "unitate_masura");
+
+  const hasMultipleVariants = product.variants.length > 1;
+  const isAvailable = product.variants.some(
+    (variant) => variant.availableForSale
+  );
+
+  const handleAddToCart = () => {
+    toast.success(
+      <div>
+        <span style={{ color: "#166534", fontWeight: "600" }}>
+          {product.title}
+        </span>
+        <div style={{ color: "#15803d", fontWeight: "500" }}>
+          {quantity} produs(e) adăugat(e) în coș!
+        </div>
+      </div>,
+      {
+        style: { color: "#166534" },
+        duration: 4000,
+        position: "bottom-right",
+      }
+    );
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6 min-h-[80vh] flex flex-col">
       <CategoryBreadcrumb slugArray={slugArray} searchQuery={searchQuery} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="relative w-full h-96 bg-gray-100 rounded-lg overflow-hidden">
+        {/* Product Image */}
+        <div className="relative w-full">
+          <div className="relative w-full h-96 rounded-lg overflow-hidden">
+            {product.images[0] && (
+              <Image
+                src={product.images[0].url}
+                alt={product.images[0].altText || product.title}
+                fill
+                className="object-contain"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            )}
+          </div>
+
+          {/* Zoom Button */}
           {product.images[0] && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => setShowZoom(true)}
+            >
+              <IconZoomIn className="w-4 h-4 mr-2" />
+              Zoom imagine
+            </Button>
+          )}
+        </div>
+
+        {/* Product Info */}
+        <div className="flex flex-col space-y-4">
+          <h1 className="text-2xl font-bold">{product.title}</h1>
+
+          <p className="text-gray-600 text-sm">
+            Cod produs: {product.id.split("/").pop()}
+          </p>
+
+          {unit && (
+            <p className="text-sm text-gray-500">
+              Unitate de măsură: {unit}
+            </p>
+          )}
+
+          <p className="text-[#44b74a] font-semibold">
+            {hasMultipleVariants
+              ? `De la ${product.priceRange.minVariantPrice.amount} RON`
+              : `${product.variants[0]?.price.amount} RON`}
+          </p>
+
+          {/* Quantity Selector */}
+          <div className="flex items-center space-x-2">
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              disabled={!isAvailable}
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            >
+              -
+            </Button>
+            <Input
+              type="number"
+              value={quantity}
+              disabled={!isAvailable}
+              onChange={(e) =>
+                setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              }
+              className="w-16 text-center"
+              min={1}
+            />
+            <Button
+              type="button"
+              size="icon"
+              variant="outline"
+              disabled={!isAvailable}
+              onClick={() => setQuantity(quantity + 1)}
+            >
+              +
+            </Button>
+          </div>
+
+          {/* Add to Cart */}
+          {isAvailable ? (
+            <Button
+              type="button"
+              className="bg-green-600 w-full md:w-1/2"
+              onClick={handleAddToCart}
+            >
+              <IconShoppingCartPlus className="w-4 h-4 mr-2" />
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              className="bg-gray-400 w-full md:w-1/2 cursor-not-allowed"
+              disabled
+            >
+              Stoc epuizat
+            </Button>
+          )}
+
+          {/* Description */}
+          {product.description && (
+            <div className="pt-4 border-t">
+              <h2 className="text-sm font-semibold mb-2 text-gray-700">
+                Descriere
+              </h2>
+              <p className="text-sm text-gray-600 whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modal for zoom */}
+      {showZoom && (
+        <div className="fixed inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
+          <div className="relative w-full h-full md:w-2/3 md:h-2/3">
             <Image
               src={product.images[0].url}
               alt={product.images[0].altText || product.title}
               fill
               className="object-contain"
-              sizes="(max-width: 768px) 100vw, 50vw"
             />
-          )}
+            <Button
+              type="button"
+              size="sm"
+              className="absolute top-4 right-4 bg-white text-black hover:bg-gray-500"
+              onClick={() => setShowZoom(false)}
+            >
+              Închide
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col space-y-4">
-          <h1 className="text-2xl font-bold">{product.title}</h1>
-          <p className="text-gray-600 text-sm">
-            Cod produs: {product.id.split("/").pop()}
-          </p>
-          <p className="text-green-600 font-semibold">
-            {product.variants.length > 1
-              ? `De la ${product.priceRange.minVariantPrice.amount} RON`
-              : `${product.variants[0]?.price.amount} RON`}
-          </p>
-          {/* 👇 Later, here you can add: quantity selector, add to cart, description etc. */}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

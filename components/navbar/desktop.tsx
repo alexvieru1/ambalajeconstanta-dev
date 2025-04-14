@@ -112,7 +112,7 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
         {/* RIGHT: Cart Icon */}
         <div className="ml-auto 2xl:mr-20">
           <Link href="/cart">
-            <IconShoppingCart className="w-6 h-6 text-black hover:text-green-600 transition" />
+            <IconShoppingCart className="w-6 h-6 text-black hover:text-[#44b74a]transition" />
           </Link>
         </div>
       </div>
@@ -138,7 +138,7 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
                     <li key={page.title}>
                       <Link
                         href={page.path}
-                        className="text-gray-700 hover:text-green-600 transition"
+                        className="text-gray-700 hover:text-[#44b74a] transition"
                       >
                         {page.title}
                       </Link>
@@ -160,7 +160,7 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
                           href={category.path}
                           onMouseEnter={() => setActiveCategory(category)}
                           onFocus={() => setActiveCategory(category)}
-                          className="block text-gray-700 hover:text-green-600 transition"
+                          className="block text-gray-700 hover:text-[#44b74a] transition"
                         >
                           {category.title}
                         </Link>
@@ -189,7 +189,7 @@ export const DesktopNavbar = ({ menu }: DesktopNavbarProps) => {
                           <li key={sub.title}>
                             <Link
                               href={sub.path}
-                              className="text-gray-700 hover:text-green-600 transition"
+                              className="text-gray-700 hover:text-[#44b74a] transition"
                             >
                               {sub.title}
                             </Link>
